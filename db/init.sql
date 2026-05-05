@@ -16,3 +16,10 @@ CREATE TABLE IF NOT EXISTS roi_detections (
 
 CREATE INDEX IF NOT EXISTS idx_roi_session_ts ON roi_detections (session_id, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_roi_frame      ON roi_detections (session_id, frame_number);
+
+-- Stamp Alembic so it does not re-run migrations already applied via this script
+CREATE TABLE IF NOT EXISTS alembic_version (
+    version_num VARCHAR(32) NOT NULL,
+    CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num)
+);
+INSERT INTO alembic_version (version_num) VALUES ('0001') ON CONFLICT DO NOTHING;
