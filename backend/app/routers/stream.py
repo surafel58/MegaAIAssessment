@@ -6,17 +6,15 @@ Frames are sourced from a per-session asyncio.Queue populated by the ingest rout
 """
 import asyncio
 import json
-import re
+import logging
 
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 
 from app.config import settings
+from app.utils import is_valid_uuid
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
-
-_UUID_RE = re.compile(
-    r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$", re.IGNORECASE
-)
 
 
 @router.websocket("/ws/stream")
@@ -24,24 +22,25 @@ async def ws_stream(
     websocket: WebSocket,
     session_id: str = Query(...),
 ):
-    if not _UUID_RE.match(session_id):
+    if not is_valid_uuid(session_id):
         await websocket.close(code=4000, reason="session_id must be a valid UUID v4")
         return
 
     await websocket.accept()
-    queue_registry: dict = websocket.app.state.queue_registry
+    queue_registry: dict[str, asyncio.Queue] = websocket.app.state.queue_registry
 
-    if session_id not in queue_registry:
-        queue_registry[session_id] = asyncio.Queue(maxsize=settings.MAX_QUEUE_SIZE)
-
+    queue_registry.setdefault(
+        session_id, asyncio.Queue(maxsize=settings.MAX_QUEUE_SIZE)
+    )
     queue: asyncio.Queue = queue_registry[session_id]
 
     try:
         while True:
-            frame_bytes = await asyncio.wait_for(queue.get(), timeout=30.0)
+            frame_bytes = await asyncio.wait_for(
+                queue.get(), timeout=settings.STREAM_TIMEOUT_SECONDS
+            )
 
             if frame_bytes is None:
-                # Ingest session ended
                 await websocket.send_text(json.dumps({"event": "session_ended"}))
                 await websocket.close()
                 break
@@ -49,6 +48,7 @@ async def ws_stream(
             await websocket.send_bytes(frame_bytes)
 
     except asyncio.TimeoutError:
+        logger.debug("Stream timeout for session %s", session_id)
         await websocket.send_text(json.dumps({"event": "timeout"}))
         await websocket.close()
     except WebSocketDisconnect:
