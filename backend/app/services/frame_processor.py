@@ -21,7 +21,7 @@ async def process_frame(
     queue_registry: dict[str, asyncio.Queue],
     db: AsyncSession,
 ) -> dict:
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     result = await loop.run_in_executor(_executor, detect_face, raw_bytes)
 

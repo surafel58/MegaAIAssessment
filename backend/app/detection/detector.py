@@ -3,6 +3,7 @@ Face detection using MediaPipe BlazeFace.
 No OpenCV (cv2) is used anywhere in this module.
 """
 import io
+import logging
 import threading
 from dataclasses import dataclass
 
@@ -11,6 +12,8 @@ import numpy as np
 from PIL import Image
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 _local = threading.local()
 
@@ -90,6 +93,7 @@ def detect_face(jpeg_bytes: bytes) -> DetectionResult:
             frame_height=height,
         )
     except Exception:
+        logger.warning("detect_face failed", exc_info=True)
         try:
             img = Image.open(io.BytesIO(jpeg_bytes))
             w, h = img.size
