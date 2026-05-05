@@ -1,0 +1,26 @@
+# Development override — replaces the built nginx frontend with Vite's dev
+# server so edits to frontend/src/** hot-reload in the browser instantly.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# The frontend is then available at http://localhost:3000 (same port as prod).
+# HMR websocket is handled automatically by the browser <-> Vite channel.
+
+services:
+  frontend:
+    build: !reset null
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      # Keep container-installed node_modules isolated from the host folder
+      - /app/node_modules
+    command: sh -c "npm install && npm run dev"
+    environment:
+      BACKEND_HOST: backend
+    ports:
+      - "3000:5173"
+    depends_on:
+      - backend
+    restart: unless-stopped
