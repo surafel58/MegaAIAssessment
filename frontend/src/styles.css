@@ -311,8 +311,12 @@ body {
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  overflow: hidden;
   transition: background 0.2s ease;
+}
+
+/* Clip canvas/idle overlay to card corners without clipping tooltips */
+.video-canvas-wrap {
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
 /* ── Video panel ── */
@@ -695,8 +699,9 @@ body {
 
 .info-tooltip-inner {
   width: 210px;
-  max-height: 140px;
+  max-height: 88px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
   background: var(--surface-raised, var(--surface));
