@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS roi_detections (
-    id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    id            VARCHAR(36)  PRIMARY KEY,
     session_id    VARCHAR(64)  NOT NULL,
     frame_number  INTEGER      NOT NULL CHECK (frame_number >= 0),
     timestamp     TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
