@@ -20,7 +20,7 @@ services:
     environment:
       BACKEND_HOST: backend
     ports:
-      - "3000:5173"
+      - "3001:5173"
     depends_on:
       - backend
     restart: unless-stopped
