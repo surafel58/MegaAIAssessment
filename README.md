@@ -130,6 +130,19 @@ Tests use an in-memory SQLite database so no Postgres instance is needed.
 
 ---
 
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `libGL.so.1: cannot open shared object file` | MediaPipe's internal cv2 needs OpenGL | Add `libgl1` to the Dockerfile apt-get line and rebuild |
+| `relation "roi_detections" already exists` | Alembic ran against a DB already initialised by `init.sql` | Run `docker compose down -v` to wipe the volume, then `docker compose up` |
+| `column "id" is of type uuid but expression is of type character varying` | `init.sql` used `UUID` type but ORM uses `String(36)` | Run `docker compose down -v` to reset, then bring up with the corrected `init.sql` |
+| Frontend blank / "camera not found" | Browser blocked camera for non-HTTPS origin | Use `localhost` (not an IP), or set `chrome://flags/#unsafely-treat-insecure-origin-as-secure` |
+| `pg_isready` healthcheck fails | Wrong DB name in healthcheck | Ensure healthcheck uses `-d ${POSTGRES_DB}` not a hard-coded name |
+| Backend crashes on startup with `ModuleNotFoundError` | Python 3.13 does not have mediapipe wheels | Pin `python:3.12-slim` in the Dockerfile |
+
+---
+
 ## Design Decisions
 
 ### Why MediaPipe over OpenCV?
