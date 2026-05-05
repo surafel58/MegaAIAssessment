@@ -67,4 +67,9 @@ async def get_roi_records(
         for r in rows
     ]
 
-    return RoiPageResponse(session_id=session_id, total=total, items=items)
+    return RoiPageResponse(
+        session_id=session_id,
+        total=total,
+        has_next=(offset + len(items) < total),
+        items=items,
+    )

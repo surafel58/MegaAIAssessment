@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class BboxSchema(BaseModel):
@@ -24,6 +24,7 @@ class RoiItem(BaseModel):
 class RoiPageResponse(BaseModel):
     session_id: str
     total: int
+    has_next: bool
     items: list[RoiItem]
 
 
