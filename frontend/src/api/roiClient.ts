@@ -20,6 +20,7 @@ export interface RoiRecord {
 export interface RoiPage {
   session_id: string
   total: number
+  has_next: boolean
   items: RoiRecord[]
 }
 
