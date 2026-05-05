@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     JPEG_QUALITY: int = 82
     DETECTION_CONFIDENCE_THRESHOLD: float = 0.6
     MAX_FRAME_BYTES: int = 2 * 1024 * 1024  # 2 MB
+    STREAM_TIMEOUT_SECONDS: float = 30.0
+    MAX_FPS_PER_SESSION: int = 30
 
     @property
     def cors_origins(self) -> list[str]:
