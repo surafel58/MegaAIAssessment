@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -9,10 +10,9 @@ from app.routers import ingest, stream, roi
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Per-session queues: session_id -> asyncio.Queue[bytes | None]
-    app.state.queue_registry = {}
+    app.state.queue_registry: dict[str, asyncio.Queue] = {}
+    app.state.frame_counters: dict[str, int] = {}
 
-    # Warm up the detector on the main thread so the first request isn't slow
     from app.detection.detector import _get_detector
     _get_detector()
 
@@ -20,6 +20,9 @@ async def lifespan(app: FastAPI):
 
     from app.detection.detector import close_all_detectors
     close_all_detectors()
+
+    from app.services.frame_processor import _executor
+    _executor.shutdown(wait=False)
 
 
 def create_app() -> FastAPI:
