@@ -4,11 +4,15 @@ Test configuration.
 Uses an in-memory SQLite database so tests run without a Postgres instance.
 Face detection tests use mocks or synthetic Pillow images.
 """
+import contextlib
 import io
 import os
 import pytest
 import pytest_asyncio
+import httpx
 from httpx import ASGITransport, AsyncClient
+from httpx_ws import aconnect_ws
+from httpx_ws.transport import ASGIWebSocketTransport
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
@@ -52,6 +56,26 @@ async def client(engine):
         base_url="http://testserver",
     ) as ac:
         yield ac
+
+
+@pytest.fixture
+def ws_app(engine):
+    """Return a FastAPI app wired to the test SQLite engine, ready for WS testing.
+
+    ASGIWebSocketTransport does not run the FastAPI lifespan, so we seed
+    app.state manually here (mirrors what lifespan() does at startup).
+    """
+    factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+
+    async def override_db():
+        async with factory() as session:
+            yield session
+
+    app = create_app()
+    app.dependency_overrides[get_db_session] = override_db
+    app.state.queue_registry = {}
+    app.state.frame_counters = {}
+    return app
 
 
 @pytest.fixture
